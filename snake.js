@@ -6,7 +6,6 @@ window.addEventListener("click", mouseClick, false)
 
 var	m,
 	bg,
-	color,
 	input,
 	mouse,
 	game,
@@ -19,25 +18,21 @@ var	m,
 
 function setup() {
 	canvas = document.getElementById("canvas");
-	
 	ctx = canvas.getContext("2d");
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
 	
-	m = new measureObject();
-	color = new colorObject();
-	
+	m = new measureObject();	
 	bg = new backgroundObject();
 	input = new inputObject();
 	mouse = new mouseObject();
 	game = new gameObject();
 	menu = new menuObject();
-	
+
 	game.start();
 }
 
 function measureObject() {
-
 	this.cell 		= 	32;
 	this.window		=  [window.innerWidth,
  						window.innerHeight];
@@ -53,34 +48,12 @@ function measureObject() {
 				   		this.window[1] / 2];
 }
 
-function colorObject() {
-	this.menu 		= "rgba(50,50,50,0.8)";
-	this.border 	= "rgba(100,100,100,1)";
-	this.arena 		= "rgba(0,0,0,1)";
-
-	this.error 		= "rgba(200,100,100,1)";
-
-	this.snakeBody 	= "rgba(200,200,200,1)";
-	this.snakeHead 	= "rgba(250,250,250,1)";
-
-	this.foodFill	= "rgba(100,100,100,1)";
-	this.foodBorder	= "rgba(225,225,225,1)";
-	
-	this.text 		= "rgba(200,200,200,1)";
-
-	this.portal		= [];
-	this.portal[0] 	= "rgba(255,102,0,1)";
-	this.portal[1] 	= "rgba(0,120,255,1)";
-	
-	this.transparent= "rgba(0,0,0,1)";
-}
-
 function backgroundObject() {
 	this.draw = function() {
-		ctx.fillStyle = color.border;
+		ctx.fillStyle = toRGBA(settings.color.game.stroke);
 		ctx.fillRect(0,0,m.window[0],m.window[1]);
 		
-		ctx.fillStyle = color.arena;
+		ctx.fillStyle = toRGBA(settings.color.game.fill);
 		ctx.fillRect(m.border[0], m.border[1], m.pixel[0], m.pixel[1]);
 	}
 }
@@ -89,23 +62,14 @@ function inputObject() {
 	this.lastKey;
 	this.pressedKeys = [];
 	
-	this.moveKeys 	= [37,38,39,40,65,68,83,87];
-	this.leftKeys 	= [37,65];
-	this.upKeys 	= [38,87]; 
-	this.rightKeys 	= [39,68];
-	this.downKeys 	= [40,83];
-	this.menuKeys	= [27,77];
-	this.restartKeys= [82];
-	this.pauseKeys 	= [32,80];
-
-	this.isMoveKey	= function(id) {return this.isKey(id, this.moveKeys);}
-	this.isLeft		= function(id) {return this.isKey(id, this.leftKeys);}
-	this.isUp		= function(id) {return this.isKey(id, this.upKeys);}
-	this.isRight	= function(id) {return this.isKey(id, this.rightKeys);}
-	this.isDown		= function(id) {return this.isKey(id, this.downKeys);}
-	this.isMenu		= function(id) {return this.isKey(id, this.menuKeys);}
-	this.isRestart	= function(id) {return this.isKey(id, this.restartKeys);}
-	this.isPause	= function(id) {return this.isKey(id, this.pauseKeys);}
+	this.isMoveKey	= function(id) {return this.isKey(id, settings.keys.move);}
+	this.isLeft		= function(id) {return this.isKey(id, settings.keys.left);}
+	this.isUp		= function(id) {return this.isKey(id, settings.keys.up);}
+	this.isRight	= function(id) {return this.isKey(id, settings.keys.right);}
+	this.isDown		= function(id) {return this.isKey(id, settings.keys.down);}
+	this.isMenu		= function(id) {return this.isKey(id, settings.keys.menu);}
+	this.isRestart	= function(id) {return this.isKey(id, settings.keys.restart);}
+	this.isPause	= function(id) {return this.isKey(id, settings.keys.pause);}
 	
 	this.isKey = function(id, keyArray) {
 		if (keyArray.indexOf(id) !== -1) return true; else return false;
@@ -115,6 +79,7 @@ function inputObject() {
 		var isRepeating = !!this.pressedKeys[id];
 		this.pressedKeys[id] = true;
 		if (isRepeating) return false;
+		if (game.paused) {if (this.isPause(id)) game.pause(0); return;}
 		
 		switch (true) {
 			case this.isLeft(id):	snake.direct([-1, 0]); break;
@@ -131,27 +96,11 @@ function inputObject() {
 	this.keyUp = function(id) {
 		this.pressedKeys[id] = false;
 	}
-	
-	this.loopCheck = async function(id, loop) {
-		if (loop === 0) await sleep(200); else await sleep(100);
-		if (this.holdingKey && (loop <= m.gmin) && this.lastKey === id) {
-			//snake.direct(id);
-			//this.loopCheck(id, ++loop);
-		}
-	}
 }
 
 function mouseObject() {
 	this.click = function(x,y) {
 		if (!game.paused) portal.click(x, y);
-	}
-}
-
-function controlObject() {
-	this.isGameRunning = false;
-	
-	this.startGame = function(width, height, players, momentum, walls, decay, portals) {
-		
 	}
 }
 
@@ -202,24 +151,24 @@ function menuObject() {
 			xcorner = x - (width/2),
 			ycorner = y - (height/2);
 		
-		bg.draw();
+		//bg.draw();
 		
 		this.box(xcorner, ycorner, width, height);
 		this.text(x, y, string, half);
 	}
 	
 	this.box = function(x,y,width,height) {
-		ctx.strokeStyle = color.border;
+		ctx.strokeStyle = toRGBA(settings.color.menu.stroke);
 		ctx.lineWidth = height/10;
 		ctx.lineJoin = "round";
-		ctx.fillStyle = color.menu;
+		ctx.fillStyle = toRGBA(settings.color.menu.fill);
 		
 		ctx.fillRect(x, y, width, height);
 		ctx.strokeRect(x, y, width, height);
 	}
 	
 	this.text = function (x,y,string,size) {
-		ctx.fillStyle = color.text;
+		ctx.fillStyle = toRGBA(settings.color.menu.text);
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.font = size + "px Courior New";
@@ -229,12 +178,8 @@ function menuObject() {
 }
 
 function cellObject(pos) {
-
-	
 	this.pos = pos;
 
-	
-	
 	this.getPixels = function() {
 		var pixels = [], s = m.cell, b = m.border, l = this.pos.length;
 		for (var i=0;i<l;i++) {
@@ -250,14 +195,15 @@ function cellObject(pos) {
 		var y = this.pos[1] + dir[1];
 		return new cellObject([x,y]);	
 	}
+
 	this.convertToGrid = function() {
 		var size = m.cell, border = m.border, pos = this.pos;
 		for (var i=0;i<2;i++) {
 			this.pos[i] = Math.floor((pos[i]-border[i])/size);
 		}
 		this.pixels = this.getPixels();
-
 	}
+
 	this.isPortal = function() {
 
 		if (!portal.opened) return false;
@@ -268,15 +214,15 @@ function cellObject(pos) {
 		}
 		return false;
 	}
+
 	this.isWall = function() {
 		if ((this.pos[0] < 0) || (this.pos[1] < 0) || (this.pos[0] >= m.grid[0]) || (this.pos[1] >= m.grid[1])) return true; else return false;
 	}	
+
 	this.isBody = function(body) {
 		var l = body.length;
 		for (var i=0;i<l;i++) {
 			if ((body[i][0] === this.pos[0]) && (body[i][1] === this.pos[1])) return true;
-
-
 		}
 		return false;
 	}
@@ -343,9 +289,9 @@ function snakeObject() {
 	}
 	
 	this.draw = function() {
-		ctx.strokeStyle = color.border;
+		ctx.strokeStyle = toRGBA(settings.color.snakebody.stroke);
 		ctx.lineWidth = m.cell/16;
-		ctx.fillStyle =color.snakeBody;
+		ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
 		
 		for (var i = 0; i < this.body.length-1; i++) { 
 			var x = m.border[0] + (this.body[i][0] * m.cell);
@@ -354,7 +300,8 @@ function snakeObject() {
 			ctx.strokeRect(x, y, m.cell, m.cell);
 		}
 		
-		ctx.fillStyle = color.snakeHead;
+		ctx.strokeStyle = toRGBA(settings.color.snakehead.stroke);
+		ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
 		var x = m.border[0] + (this.head.pos[0] * m.cell);
 		var y = m.border[1] + (this.head.pos[1] * m.cell);
 		ctx.fillRect(x, y, m.cell, m.cell);
@@ -387,8 +334,6 @@ function foodObject() {
 	}
 	
 	this.eat = function() {
-
-
 		if ((snake.head.pos[0] === this.cell.pos[0]) && (snake.head.pos[1] === this.cell.pos[1])) {
 			this.move();
 			snake.maxLength++;
@@ -396,9 +341,9 @@ function foodObject() {
 	}
 	
 	this.draw = function() {
-		ctx.strokeStyle = color.foodBorder;
-		ctx.lineWidth = m.size/16;
-		ctx.fillStyle = color.foodFill;
+		ctx.strokeStyle = toRGBA(settings.color.food.stroke);
+		ctx.lineWidth = m.cell/16;
+		ctx.fillStyle = toRGBA(settings.color.food.fill);
 		
 		var size = m.cell;
 		var x = m.border[0] + (this.cell.pos[0] * size);
@@ -436,7 +381,7 @@ function portalObject() {
 		this.gate[1] = cell;
 		
 		this.opened = true;
-		snake.move(snake.head);
+		snake.move(cell);
 		game.draw();
 	}
 	this.inUse = function() {
@@ -457,9 +402,9 @@ function portalObject() {
 		if (!this.opened) return false;
 
 
-			 if (snake.head.isPortal())	ctx.fillStyle = color.snakeHead;
-		else if (this.inUse())			ctx.fillStyle = color.snakeBody;
-		else 							ctx.fillStyle = color.transparent;
+			 if (snake.head.isPortal())	ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
+		else if (this.inUse())			ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
+		else 							ctx.fillStyle = toRGBA(settings.color.transparent.fill);
 		
 		var size = m.cell,
 			l	 = this.gate.length;
@@ -469,8 +414,11 @@ function portalObject() {
 			var x = this.gate[i].pixels[0],
 				y = this.gate[i].pixels[1];
 			
-			ctx.strokeStyle = color.portal[i];
-			
+			if (i===0) {
+				ctx.strokeStyle = toRGBA(settings.color.orangeportal.stroke);
+			} else {
+				ctx.strokeStyle = toRGBA(settings.color.blueportal.stroke);
+			}
 			ctx.fillRect(x, y, size, size);
 			ctx.strokeRect(x, y, size, size);
 		}
@@ -485,7 +433,6 @@ function keyUp(event) {
 	input.keyUp(event.keyCode);
 }
 
-
 function mouseClick(event) {
 	var x = event.clientX,
 		y = event.clientY;
@@ -498,6 +445,11 @@ function getRandomCell() {
 	return new cellObject([x, y]);
 }
 
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+function toRGBA(array) {
+	var output = "rgba(";
+	for (var i=0;i<3;i++) {
+		output += array[i] + ",";
+	}
+	output += array[3] + ")";
+	return output;
 }
