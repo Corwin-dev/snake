@@ -34,6 +34,7 @@ function setup() {
 	menu = new menuObject();
 	
 	game.start();
+
 }
 
 function measureObject() {
@@ -250,6 +251,13 @@ function cellObject(pos) {
 		var y = this.pos[1] + dir[1];
 		return new cellObject([x,y]);	
 	}
+	
+	this.getDirection = function(cell) {
+		var x = cell.pos[0] - this.pos[0];
+		var y = cell.pos[1] - this.pos[1];
+		return [x,y];
+	}
+	
 	this.convertToGrid = function() {
 		var size = m.cell, border = m.border, pos = this.pos;
 		for (var i=0;i<2;i++) {
@@ -346,20 +354,48 @@ function snakeObject() {
 		ctx.strokeStyle = color.border;
 		ctx.lineWidth = m.cell/16;
 		ctx.fillStyle =color.snakeBody;
+		var l = this.body.length;
 		
-		for (var i = 0; i < this.body.length-1; i++) { 
+		for (var i = 0; i < l-1; i++) {
+
+			if (i>0) { 
+				var previousCell = new cellObject([this.body[i-1][0], this.body[i-1][1]]);
+				var currentCell = new cellObject([this.body[i][0], this.body[i][1]]);
+				var nextCell = new cellObject([this.body[i+1][0], this.body[i+1][1]]);
+				this.stroke(previousCell, currentCell, nextCell);
+			}
+			
+			
+			
 			var x = m.border[0] + (this.body[i][0] * m.cell);
 			var y = m.border[1] + (this.body[i][1] * m.cell);
 			ctx.fillRect(x, y, m.cell, m.cell);
-			ctx.strokeRect(x, y, m.cell, m.cell);
+			//ctx.strokeRect(x, y, m.cell, m.cell);
 		}
 		
 		ctx.fillStyle = color.snakeHead;
 		var x = m.border[0] + (this.head.pos[0] * m.cell);
 		var y = m.border[1] + (this.head.pos[1] * m.cell);
 		ctx.fillRect(x, y, m.cell, m.cell);
-		ctx.strokeRect(x, y, m.cell, m.cell);
+		//ctx.strokeRect(x, y, m.cell, m.cell);
 	}
+	
+	this.stroke = function(previous, current, next) {
+		var pre = current.getDirection(previous);	// [-1, 0]
+		var nex = current.getDirection(next);			// [ 0, 1]
+		
+		if (pre[0] === nex[0]) this.drawStroke(0xA); // 0xA == Left(8) and Right(2) edges	
+		if (pre[1] === nex[1]) this.drawStroke(0x5); // 0x5 == Top(4) and Bottom(1) edges
+		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(0xC); // 0xC == Left(8) and Top(4) edges
+		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(0x6); // 0x6 == Top(4) and Right(2) edges
+		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(0x3); // 0x3 == Right(2) and Bottom (1) edges
+		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(0x9); // 0x9 == Bottom(1) and Left(8) edges
+	}
+	
+	this.drawStroke = function(hex) {
+		console.log(this.head.pos+" "+hex);
+	}
+	
 }
 
 function foodObject() {
