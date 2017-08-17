@@ -1,2 +1,2 @@
 # snake
-Snake game, for practicing object oriented JavaScript.
+A simple Snake game that I make for practice.
