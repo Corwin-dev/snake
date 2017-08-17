@@ -19,14 +19,12 @@ var	m,
 
 function setup() {
 	canvas = document.getElementById("canvas");
-	
 	ctx = canvas.getContext("2d");
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
 	
 	m = new measureObject();
 	color = new colorObject();
-	
 	bg = new backgroundObject();
 	input = new inputObject();
 	mouse = new mouseObject();
@@ -34,11 +32,9 @@ function setup() {
 	menu = new menuObject();
 	
 	game.start();
-
 }
 
 function measureObject() {
-
 	this.cell 		= 	32;
 	this.window		=  [window.innerWidth,
  						window.innerHeight];
@@ -58,21 +54,15 @@ function colorObject() {
 	this.menu 		= "rgba(50,50,50,0.8)";
 	this.border 	= "rgba(100,100,100,1)";
 	this.arena 		= "rgba(0,0,0,1)";
-
 	this.error 		= "rgba(200,100,100,1)";
-
 	this.snakeBody 	= "rgba(200,200,200,1)";
 	this.snakeHead 	= "rgba(250,250,250,1)";
-
 	this.foodFill	= "rgba(100,100,100,1)";
 	this.foodBorder	= "rgba(225,225,225,1)";
-	
 	this.text 		= "rgba(200,200,200,1)";
-
 	this.portal		= [];
 	this.portal[0] 	= "rgba(255,102,0,1)";
 	this.portal[1] 	= "rgba(0,120,255,1)";
-	
 	this.transparent= "rgba(0,0,0,1)";
 }
 
@@ -132,27 +122,11 @@ function inputObject() {
 	this.keyUp = function(id) {
 		this.pressedKeys[id] = false;
 	}
-	
-	this.loopCheck = async function(id, loop) {
-		if (loop === 0) await sleep(200); else await sleep(100);
-		if (this.holdingKey && (loop <= m.gmin) && this.lastKey === id) {
-			//snake.direct(id);
-			//this.loopCheck(id, ++loop);
-		}
-	}
 }
 
 function mouseObject() {
 	this.click = function(x,y) {
 		if (!game.paused) portal.click(x, y);
-	}
-}
-
-function controlObject() {
-	this.isGameRunning = false;
-	
-	this.startGame = function(width, height, players, momentum, walls, decay, portals) {
-		
 	}
 }
 
@@ -192,7 +166,6 @@ function gameObject() {
 		food.draw();
 		snake.draw();
 		portal.draw();
-
 	}
 }
 
@@ -230,11 +203,7 @@ function menuObject() {
 }
 
 function cellObject(pos) {
-
-	
 	this.pos = pos;
-
-	
 	
 	this.getPixels = function() {
 		var pixels = [], s = m.cell, b = m.border, l = this.pos.length;
@@ -264,27 +233,25 @@ function cellObject(pos) {
 			this.pos[i] = Math.floor((pos[i]-border[i])/size);
 		}
 		this.pixels = this.getPixels();
-
 	}
+	
 	this.isPortal = function() {
-
 		if (!portal.opened) return false;
 		var l = portal.gate.length, k = this.pos.length;
 		for (var i=0;i<l;i++) {
-
 			if ((this.pos[0] === portal.gate[i].pos[0]) && (this.pos[1] === portal.gate[i].pos[1])) return true;
 		}
 		return false;
 	}
+	
 	this.isWall = function() {
 		if ((this.pos[0] < 0) || (this.pos[1] < 0) || (this.pos[0] >= m.grid[0]) || (this.pos[1] >= m.grid[1])) return true; else return false;
 	}	
+	
 	this.isBody = function(body) {
 		var l = body.length;
 		for (var i=0;i<l;i++) {
 			if ((body[i][0] === this.pos[0]) && (body[i][1] === this.pos[1])) return true;
-
-
 		}
 		return false;
 	}
@@ -365,19 +332,15 @@ function snakeObject() {
 				this.stroke(previousCell, currentCell, nextCell);
 			}
 			
-			
-			
 			var x = m.border[0] + (this.body[i][0] * m.cell);
 			var y = m.border[1] + (this.body[i][1] * m.cell);
 			ctx.fillRect(x, y, m.cell, m.cell);
-			//ctx.strokeRect(x, y, m.cell, m.cell);
 		}
 		
 		ctx.fillStyle = color.snakeHead;
 		var x = m.border[0] + (this.head.pos[0] * m.cell);
 		var y = m.border[1] + (this.head.pos[1] * m.cell);
 		ctx.fillRect(x, y, m.cell, m.cell);
-		//ctx.strokeRect(x, y, m.cell, m.cell);
 	}
 	
 	this.stroke = function(previous, current, next) {
@@ -395,7 +358,6 @@ function snakeObject() {
 	this.drawStroke = function(hex) {
 		console.log(this.head.pos+" "+hex);
 	}
-	
 }
 
 function foodObject() {
@@ -443,7 +405,6 @@ function foodObject() {
 		ctx.fillRect(x,y,size,size);
 		ctx.strokeRect(x,y,size,size);
 	}
-
 }
 
 function portalObject() {
@@ -475,6 +436,7 @@ function portalObject() {
 		snake.move(snake.head);
 		game.draw();
 	}
+	
 	this.inUse = function() {
 		if (!this.opened) return false;
 		var l = this.gate.length;
@@ -485,14 +447,12 @@ function portalObject() {
 
 			if (result) return true;
 		}
-
 		return false;
 	}
 	
 	this.draw = function() {
 		if (!this.opened) return false;
-
-
+		
 			 if (snake.head.isPortal())	ctx.fillStyle = color.snakeHead;
 		else if (this.inUse())			ctx.fillStyle = color.snakeBody;
 		else 							ctx.fillStyle = color.transparent;
@@ -532,8 +492,4 @@ function getRandomCell() {
 	var x = Math.floor(Math.random() * m.grid[0]),
 		y = Math.floor(Math.random() * m.grid[1])
 	return new cellObject([x, y]);
-}
-
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
 }
