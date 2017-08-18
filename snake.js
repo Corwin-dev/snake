@@ -255,6 +255,28 @@ function cellObject(pos) {
 		}
 		return false;
 	}
+
+	this.drawEdge = function(color, side) {
+		var x = this.pos[0],
+			y = this.pos[1],
+			s = m.size;
+
+		ctx.strokeStyle(color);
+		ctx.lineWidth = s/16;
+		ctx.beginPath();
+		switch (side) {
+			case 0: this.drawLine(x,y,color,x,y+s); break;
+			case 1: this.drawLine(x,y,color,x+s,y); break;
+			case 2: this.drawLine(x+s,y,color,x+s,y+s); break;
+			case 3: this.drawLine(x,y+s,color,x+s,y+s); break;
+		}
+		ctx.stroke();
+	}
+
+	this.drawLine = function(x1,y1,color,x2,y2){
+		ctx.moveTo(x1,y1);
+		ctx.lineTo(x2,y2);
+	}
 }
 
 function snakeObject() {
@@ -312,7 +334,6 @@ function snakeObject() {
 				portal.cooldown = 2;
 
 				return portal.gate[l-i];
-				
 			}
 		}
 	}
@@ -349,14 +370,18 @@ function snakeObject() {
 		
 		if (pre[0] === nex[0]) this.drawStroke(0xA); // 0xA == Left(8) and Right(2) edges	
 		if (pre[1] === nex[1]) this.drawStroke(0x5); // 0x5 == Top(4) and Bottom(1) edges
-		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(0xC); // 0xC == Left(8) and Top(4) edges
-		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(0x6); // 0x6 == Top(4) and Right(2) edges
-		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(0x3); // 0x3 == Right(2) and Bottom (1) edges
-		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(0x9); // 0x9 == Bottom(1) and Left(8) edges
+		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(current, 0xC); // 0xC == Left(8) and Top(4) edges
+		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(current, 0x6); // 0x6 == Top(4) and Right(2) edges
+		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(current, 0x3); // 0x3 == Right(2) and Bottom (1) edges
+		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(current, 0x9); // 0x9 == Bottom(1) and Left(8) edges
 	}
 	
-	this.drawStroke = function(hex) {
-		console.log(this.head.pos+" "+hex);
+	this.drawStroke = function(cell, hex) {
+		var color = toRGBA(settings.color.snakebody.stroke);
+		if ((hex & 0x8) === 0x8) cell.drawEdge(color, 0);
+		if ((hex & 0x4) === 0x4) cell.drawEdge(color, 1);
+		if ((hex & 0x2) === 0x2) cell.drawEdge(color, 2);
+		if ((hex & 0x1) === 0x1) cell.drawEdge(color, 3);		
 	}
 }
 
