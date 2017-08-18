@@ -1,4 +1,4 @@
-{
+var settings = {
 	"color":
 	{
 		"menu":
@@ -43,11 +43,11 @@
 		"orangeportal":
 		{
 			"stroke"	: [255,102,0,1]
-		}
+		},
 		"blueportal":
 		{
 			"stroke"	: [0,120,255,1]
-		}
+		},
 		"transparent":
 		{
 			"fill"		: [0,0,0,0],
