@@ -21,7 +21,7 @@ function setup() {
 	ctx = canvas.getContext("2d");
 	ctx.canvas.width  = window.innerWidth;
 	ctx.canvas.height = window.innerHeight;
-	
+  
 	m = new measureObject();	
 	bg = new backgroundObject();
 	input = new inputObject();
@@ -140,7 +140,6 @@ function gameObject() {
 		food.draw();
 		snake.draw();
 		portal.draw();
-
 	}
 }
 
@@ -180,7 +179,7 @@ function menuObject() {
 function cellObject(pos) {
 	this.pos = pos;
 
-	this.getPixels = function() {
+  this.getPixels = function() {
 		var pixels = [], s = m.cell, b = m.border, l = this.pos.length;
 		for (var i=0;i<l;i++) {
 			pixels[i] = b[i]+(pos[i]*s);
@@ -196,6 +195,12 @@ function cellObject(pos) {
 		return new cellObject([x,y]);	
 	}
 
+	this.getDirection = function(cell) {
+		var x = cell.pos[0] - this.pos[0];
+		var y = cell.pos[1] - this.pos[1];
+		return [x,y];
+	}
+
 	this.convertToGrid = function() {
 		var size = m.cell, border = m.border, pos = this.pos;
 		for (var i=0;i<2;i++) {
@@ -205,11 +210,9 @@ function cellObject(pos) {
 	}
 
 	this.isPortal = function() {
-
 		if (!portal.opened) return false;
 		var l = portal.gate.length, k = this.pos.length;
 		for (var i=0;i<l;i++) {
-
 			if ((this.pos[0] === portal.gate[i].pos[0]) && (this.pos[1] === portal.gate[i].pos[1])) return true;
 		}
 		return false;
@@ -225,6 +228,28 @@ function cellObject(pos) {
 			if ((body[i][0] === this.pos[0]) && (body[i][1] === this.pos[1])) return true;
 		}
 		return false;
+	}
+
+	this.drawEdge = function(color, side) {
+		var x = this.pos[0],
+			y = this.pos[1],
+			s = m.size;
+
+		ctx.strokeStyle(color);
+		ctx.lineWidth = s/16;
+		ctx.beginPath();
+		switch (side) {
+			case 0: this.drawLine(x,y,color,x,y+s); break;
+			case 1: this.drawLine(x,y,color,x+s,y); break;
+			case 2: this.drawLine(x+s,y,color,x+s,y+s); break;
+			case 3: this.drawLine(x,y+s,color,x+s,y+s); break;
+		}
+		ctx.stroke();
+	}
+
+	this.drawLine = function(x1,y1,color,x2,y2){
+		ctx.moveTo(x1,y1);
+		ctx.lineTo(x2,y2);
 	}
 }
 
@@ -283,7 +308,6 @@ function snakeObject() {
 				portal.cooldown = 2;
 
 				return portal.gate[l-i];
-				
 			}
 		}
 	}
@@ -291,13 +315,22 @@ function snakeObject() {
 	this.draw = function() {
 		ctx.strokeStyle = toRGBA(settings.color.snakebody.stroke);
 		ctx.lineWidth = m.cell/16;
+    
+		var l = this.body.length;
 		ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
-		
-		for (var i = 0; i < this.body.length-1; i++) { 
+    
+		for (var i = 0; i < l-1; i++) {
+
+			if (i>0) { 
+				var previousCell = new cellObject([this.body[i-1][0], this.body[i-1][1]]);
+				var currentCell = new cellObject([this.body[i][0], this.body[i][1]]);
+				var nextCell = new cellObject([this.body[i+1][0], this.body[i+1][1]]);
+				this.stroke(previousCell, currentCell, nextCell);
+			}
+			
 			var x = m.border[0] + (this.body[i][0] * m.cell);
 			var y = m.border[1] + (this.body[i][1] * m.cell);
 			ctx.fillRect(x, y, m.cell, m.cell);
-			ctx.strokeRect(x, y, m.cell, m.cell);
 		}
 		
 		ctx.strokeStyle = toRGBA(settings.color.snakehead.stroke);
@@ -305,7 +338,26 @@ function snakeObject() {
 		var x = m.border[0] + (this.head.pos[0] * m.cell);
 		var y = m.border[1] + (this.head.pos[1] * m.cell);
 		ctx.fillRect(x, y, m.cell, m.cell);
-		ctx.strokeRect(x, y, m.cell, m.cell);
+	}
+	
+	this.stroke = function(previous, current, next) {
+		var pre = current.getDirection(previous);	// [-1, 0]
+		var nex = current.getDirection(next);			// [ 0, 1]
+		
+		if (pre[0] === nex[0]) this.drawStroke(0xA); // 0xA == Left(8) and Right(2) edges	
+		if (pre[1] === nex[1]) this.drawStroke(0x5); // 0x5 == Top(4) and Bottom(1) edges
+		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(current, 0xC); // 0xC == Left(8) and Top(4) edges
+		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(current, 0x6); // 0x6 == Top(4) and Right(2) edges
+		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(current, 0x3); // 0x3 == Right(2) and Bottom (1) edges
+		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(current, 0x9); // 0x9 == Bottom(1) and Left(8) edges
+	}
+	
+	this.drawStroke = function(cell, hex) {
+		var color = toRGBA(settings.color.snakebody.stroke);
+		if ((hex & 0x8) === 0x8) cell.drawEdge(color, 0);
+		if ((hex & 0x4) === 0x4) cell.drawEdge(color, 1);
+		if ((hex & 0x2) === 0x2) cell.drawEdge(color, 2);
+		if ((hex & 0x1) === 0x1) cell.drawEdge(color, 3);		
 	}
 }
 
@@ -352,7 +404,6 @@ function foodObject() {
 		ctx.fillRect(x,y,size,size);
 		ctx.strokeRect(x,y,size,size);
 	}
-
 }
 
 function portalObject() {
@@ -384,6 +435,7 @@ function portalObject() {
 		snake.move(cell);
 		game.draw();
 	}
+	
 	this.inUse = function() {
 		if (!this.opened) return false;
 		var l = this.gate.length;
@@ -394,13 +446,11 @@ function portalObject() {
 
 			if (result) return true;
 		}
-
 		return false;
 	}
 	
 	this.draw = function() {
 		if (!this.opened) return false;
-
 
 			 if (snake.head.isPortal())	ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
 		else if (this.inUse())			ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
@@ -443,7 +493,6 @@ function getRandomCell() {
 	var x = Math.floor(Math.random() * m.grid[0]),
 		y = Math.floor(Math.random() * m.grid[1])
 	return new cellObject([x, y]);
-}
 
 function toRGBA(array) {
 	var output = "rgba(";
