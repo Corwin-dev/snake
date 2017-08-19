@@ -249,7 +249,6 @@ function cellObject(pos) {
 	}
 
 	this.drawLine = function(x1,y1,color,x2,y2){
-		console.log(x1+" "+y1+" "+x2+" "+y2)
 		ctx.moveTo(x1,y1);
 		ctx.lineTo(x2,y2);
 	}
@@ -315,46 +314,50 @@ function snakeObject() {
 		ctx.strokeStyle = toRGBA(settings.color.snakebody.stroke);
 		ctx.lineWidth = m.cell/16;
     
-		var l = this.body.length;
+		var l = this.body.length - 1;
 		ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
     
-		for (var i = 0; i < l-1; i++) {
-
+		for (var i = 0; i<=l; i++) {
+			var previousCell,
+				currentCell,
+				nextCell;
+				
+			if (i===(l)) {
+				ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
+				ctx.strokeStyle = toRGBA(settings.color.snakehead.stroke);
+			}
 			
 			var x = m.border[0] + (this.body[i][0] * m.cell);
 			var y = m.border[1] + (this.body[i][1] * m.cell);
 			ctx.fillRect(x, y, m.cell, m.cell);
-			var previousCell = null;
-			if (i>0) { 
-				previousCell = new cellObject([this.body[i-1][0], this.body[i-1][1]]);
-			}
-			var currentCell = new cellObject([this.body[i][0], this.body[i][1]]);
-			var nextCell = new cellObject([this.body[i+1][0], this.body[i+1][1]]);
+
+			if (i>0) previousCell = new cellObject([this.body[i-1][0], this.body[i-1][1]]);
+			currentCell = new cellObject([this.body[i][0], this.body[i][1]]);
+			if (i<l) nextCell = new cellObject([this.body[i+1][0], this.body[i+1][1]]);
 			this.stroke(previousCell, currentCell, nextCell);
 		}
-		
-		ctx.strokeStyle = toRGBA(settings.color.snakehead.stroke);
-		ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
-		var x = m.border[0] + (this.head.pos[0] * m.cell);
-		var y = m.border[1] + (this.head.pos[1] * m.cell);
-		ctx.fillRect(x, y, m.cell, m.cell);
 	}
 	
 	this.stroke = function(previous, current, next) {
-		var nex = current.getDirection(next);
-
-		if (previous === null) {
-			
-			switch (nex)
-				case [-1, 0] this.drawStroke(current, 0x7); break; //left
-				case [ 0,-1] this.drawStroke(current, 0xB); break; //up
-				case [ 1, 0] this.drawStroke(current, 0xD); break; //right
-				case [ 0, 1] this.drawStroke(current, 0xE); break; //down
+		if ((previous === undefined) || (next === undefined)) {
+			var dir;
+			switch (undefined) {
+				case previous:	dir = current.getDirection(next); break;
+				case next:		dir = current.getDirection(previous); break;
+			}
+			switch (dir[0]) {
+				case -1: this.drawStroke(current, 0x7); break; //left
+				case  1: this.drawStroke(current, 0xD); break; //right
+			}
+			switch (dir[1]) {
+				case -1: this.drawStroke(current, 0xB); break; //up
+				case  1: this.drawStroke(current, 0xE); break; //down
+			}
 			return true;
 		}
-
-		var pre = current.getDirection(previous);	// [-1, 0]
-					// [ 0, 1]
+		
+		var nex = current.getDirection(next);
+		var pre = current.getDirection(previous);
 		
 		if (pre[0] === nex[0]) this.drawStroke(current, 0xA); // 0xA == Left(8) and Right(2) edges	
 		if (pre[1] === nex[1]) this.drawStroke(current, 0x5); // 0x5 == Top(4) and Bottom(1) edges
