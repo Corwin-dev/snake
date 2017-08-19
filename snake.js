@@ -231,12 +231,13 @@ function cellObject(pos) {
 	}
 
 	this.drawEdge = function(color, side) {
-		var x = this.pos[0],
-			y = this.pos[1],
-			s = m.size;
+		var s = m.cell;
+		var x = (this.pos[0] * s) + m.border[0],
+			y = (this.pos[1] * s) + m.border[1];
 
-		ctx.strokeStyle(color);
-		ctx.lineWidth = s/16;
+		ctx.strokeStyle = color;
+		ctx.lineWidth = s/8;
+		ctx.lineCap = "round";
 		ctx.beginPath();
 		switch (side) {
 			case 0: this.drawLine(x,y,color,x,y+s); break;
@@ -280,9 +281,7 @@ function snakeObject() {
 	}
 	
 	this.isObstructed = function(cell) {
-
 		if (cell.isWall()) return true;
-
 		if (cell.isBody(this.body)) return true;
 		return false;
 	}
@@ -295,7 +294,6 @@ function snakeObject() {
 		
 		this.body.push([x, y]);
 		if (current > target) this.body.shift(0, current-target);
-
 	}
 	
 	this.traversePortal = function(cell) {	
@@ -316,36 +314,53 @@ function snakeObject() {
 		ctx.strokeStyle = toRGBA(settings.color.snakebody.stroke);
 		ctx.lineWidth = m.cell/16;
     
-		var l = this.body.length;
+		var l = this.body.length - 1;
 		ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
     
-		for (var i = 0; i < l-1; i++) {
-
-			if (i>0) { 
-				var previousCell = new cellObject([this.body[i-1][0], this.body[i-1][1]]);
-				var currentCell = new cellObject([this.body[i][0], this.body[i][1]]);
-				var nextCell = new cellObject([this.body[i+1][0], this.body[i+1][1]]);
-				this.stroke(previousCell, currentCell, nextCell);
+		for (var i = 0; i<=l; i++) {
+			var previousCell,
+				currentCell,
+				nextCell;
+				
+			if (i===(l)) {
+				ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
+				ctx.strokeStyle = toRGBA(settings.color.snakehead.stroke);
 			}
 			
 			var x = m.border[0] + (this.body[i][0] * m.cell);
 			var y = m.border[1] + (this.body[i][1] * m.cell);
 			ctx.fillRect(x, y, m.cell, m.cell);
+
+			if (i>0) previousCell = new cellObject([this.body[i-1][0], this.body[i-1][1]]);
+			currentCell = new cellObject([this.body[i][0], this.body[i][1]]);
+			if (i<l) nextCell = new cellObject([this.body[i+1][0], this.body[i+1][1]]);
+			this.stroke(previousCell, currentCell, nextCell);
 		}
-		
-		ctx.strokeStyle = toRGBA(settings.color.snakehead.stroke);
-		ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
-		var x = m.border[0] + (this.head.pos[0] * m.cell);
-		var y = m.border[1] + (this.head.pos[1] * m.cell);
-		ctx.fillRect(x, y, m.cell, m.cell);
 	}
 	
 	this.stroke = function(previous, current, next) {
-		var pre = current.getDirection(previous);	// [-1, 0]
-		var nex = current.getDirection(next);			// [ 0, 1]
+		if ((previous === undefined) || (next === undefined)) {
+			var dir;
+			switch (undefined) {
+				case previous:	dir = current.getDirection(next); break;
+				case next:		dir = current.getDirection(previous); break;
+			}
+			switch (dir[0]) {
+				case -1: this.drawStroke(current, 0x7); break; //left
+				case  1: this.drawStroke(current, 0xD); break; //right
+			}
+			switch (dir[1]) {
+				case -1: this.drawStroke(current, 0xB); break; //up
+				case  1: this.drawStroke(current, 0xE); break; //down
+			}
+			return true;
+		}
 		
-		if (pre[0] === nex[0]) this.drawStroke(0xA); // 0xA == Left(8) and Right(2) edges	
-		if (pre[1] === nex[1]) this.drawStroke(0x5); // 0x5 == Top(4) and Bottom(1) edges
+		var nex = current.getDirection(next);
+		var pre = current.getDirection(previous);
+		
+		if (pre[0] === nex[0]) this.drawStroke(current, 0xA); // 0xA == Left(8) and Right(2) edges	
+		if (pre[1] === nex[1]) this.drawStroke(current, 0x5); // 0x5 == Top(4) and Bottom(1) edges
 		if (((pre[0] ===  1) || (nex[0] ===  1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(current, 0xC); // 0xC == Left(8) and Top(4) edges
 		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] ===  1) || (nex[1] ===  1))) this.drawStroke(current, 0x6); // 0x6 == Top(4) and Right(2) edges
 		if (((pre[0] === -1) || (nex[0] === -1)) && ((pre[1] === -1) || (nex[1] === -1))) this.drawStroke(current, 0x3); // 0x3 == Right(2) and Bottom (1) edges
@@ -357,7 +372,7 @@ function snakeObject() {
 		if ((hex & 0x8) === 0x8) cell.drawEdge(color, 0);
 		if ((hex & 0x4) === 0x4) cell.drawEdge(color, 1);
 		if ((hex & 0x2) === 0x2) cell.drawEdge(color, 2);
-		if ((hex & 0x1) === 0x1) cell.drawEdge(color, 3);		
+		if ((hex & 0x1) === 0x1) cell.drawEdge(color, 3);
 	}
 }
 
@@ -493,6 +508,7 @@ function getRandomCell() {
 	var x = Math.floor(Math.random() * m.grid[0]),
 		y = Math.floor(Math.random() * m.grid[1])
 	return new cellObject([x, y]);
+}
 
 function toRGBA(array) {
 	var output = "rgba(";
