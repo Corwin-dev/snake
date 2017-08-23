@@ -53,37 +53,46 @@ function cellObject(pos) {
 		}
 		return false;
 	}
-
-	this.drawEdge = function(color, side) {
-		var s = m.cell;
-		var x = (this.pos[0] * s) + m.border[0],
-			y = (this.pos[1] * s) + m.border[1];
-
-		ctx.strokeStyle = color;
-		ctx.lineWidth = s/8;
-		ctx.lineCap = "round";
-		ctx.beginPath();
-		switch (side) {
-			case 0: this.drawLine(x,y,color,x,y+s); break;
-			case 1: this.drawLine(x,y,color,x+s,y); break;
-			case 2: this.drawLine(x+s,y,color,x+s,y+s); break;
-			case 3: this.drawLine(x,y+s,color,x+s,y+s); break;
-		}
-		ctx.stroke();
-	}
-
-	this.drawLine = function(x1,y1,color,x2,y2){
-		ctx.moveTo(x1,y1);
-		ctx.lineTo(x2,y2);
-	}
-}
-
-function backgroundObject() {
-	this.draw = function() {
-		ctx.fillStyle = toRGBA(settings.color.game.stroke);
-		ctx.fillRect(0,0,m.window[0],m.window[1]);
+	
+	this.draw = function(fill, border, sides) {
+		var cellSize = m.cell;
+		var edgeWidth = 2;
+		var coreSize = cellSize - (edgeWidth*2);
+		var x_edge = (this.pos[0] * cellSize) + m.border[0],
+			y_edge = (this.pos[1] * cellSize) + m.border[1];
+		var x_core = x_edge + edgeWidth,
+			y_core = y_edge + edgeWidth;
 		
-		ctx.fillStyle = toRGBA(settings.color.game.fill);
-		ctx.fillRect(m.border[0], m.border[1], m.pixel[0], m.pixel[1]);
+		
+		ctx.fillStyle = border;
+		ctx.fillRect(x_edge, y_edge, cellSize, cellSize);
+		
+		ctx.fillstyle = fill;
+		ctx.fillRect(x_core, y_core, coreSize, coreSize);
+		
+		//console.log(fill+border);
+		if ((sides & 0x8) === 0x8) this.fillEdge(fill, 0);
+		if ((sides & 0x4) === 0x4) this.fillEdge(fill, 1);
+		if ((sides & 0x2) === 0x2) this.fillEdge(fill, 2);
+		if ((sides & 0x1) === 0x1) this.fillEdge(fill, 3);
+	}
+	
+	this.fillEdge = function(fill, side) {
+		var cellSize = m.cell;
+		var edgeWidth = m.edge;
+		var coreSize = cellSize - (edgeWidth*2);
+		var x_edge = (this.pos[0] * cellSize) + m.border[0],
+			y_edge = (this.pos[1] * cellSize) + m.border[1];
+		var x_core = x_edge + edgeWidth,
+			y_core = y_edge + edgeWidth;
+			
+		ctx.fillstyle = fill;
+		
+		switch (side) {
+			case 0: ctx.fillRect(x_edge, y_core, edgeWidth, coreSize); break;
+			case 1: ctx.fillRect(x_core, y_edge, coreSize, edgeWidth); break;
+			case 2: ctx.fillRect(x_edge+x_core, y_core, edgeWidth, coreSize); break;
+			case 3: ctx.fillRect(x_edge, y_edge+y_core, coreSize, edgeWidth); break;
+		}
 	}
 }
