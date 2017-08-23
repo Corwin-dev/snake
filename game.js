@@ -1,5 +1,53 @@
 "use strict";
 
+function gameObject() {
+	this.paused = false;
+	this.pausedBy;
+	this.pauseText = "PAUSED";
+	this.death = true;
+	this.velocity = true;
+
+	
+	this.start = function() {
+		if (this.velocity) setInterval(this.update, 100);
+		this.create();
+		this.draw();
+	}
+	
+	this.update = function() {
+		if (!game.paused && game.velocity) input.update();
+		console.log(this.paused, this.velocity);
+	}
+
+	this.create = function() {
+		snake = new snakeObject();
+		portal = new portalObject();
+		food = new foodObject();
+		food.move();
+	}
+	
+	this.pause = function(flag) {
+		this.paused = !this.paused;
+		
+		switch (this.paused) {
+			case true: 
+				menu.draw(m.center[0], m.center[1], this.pauseText, m.pixel[1]/8);
+				break;
+			case false: 
+				if (!snake) this.create();
+				this.draw();
+				break;
+		}
+	}
+		
+	this.draw = function() {
+		bg.draw();
+		food.draw();
+		snake.draw();
+		portal.draw();
+	}
+}
+
 function foodObject() {
 	this.cell = new cellObject([0,0]);
 

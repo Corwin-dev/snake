@@ -33,7 +33,7 @@ function snakeObject() {
 	
 	this.isObstructed = function(cell) {
 		if (cell.isWall()) return true;
-		if (cell.isBody(this.body)) return true;
+		if (cell.isBody(this.body, true)) return true;
 		return false;
 	}
 	

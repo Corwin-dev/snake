@@ -1,5 +1,7 @@
 "use strict";
 
+
+
 var	m,
 	bg,
 	input,
@@ -42,45 +44,6 @@ function measureObject() {
 				   		Math.floor((this.window[1] % this.cell) / 2)];
 	this.center 	=  [this.window[0]  / 2,
 				   		this.window[1] / 2];
-}
-
-function gameObject() {
-	this.paused = false;
-	this.pausedBy;
-	this.pauseText = "PAUSED";
-	
-	this.start = function() {
-		this.create();
-		this.draw();
-	}
-	
-	this.create = function() {
-		snake = new snakeObject();
-		portal = new portalObject();
-		food = new foodObject();
-		food.move();
-	}
-	
-	this.pause = function(flag) {
-		this.paused = !this.paused;
-		
-		switch (this.paused) {
-			case true: 
-				menu.draw(m.center[0], m.center[1], this.pauseText, m.pixel[1]/8);
-				break;
-			case false: 
-				if (!snake) this.create();
-				this.draw();
-				break;
-		}
-	}
-		
-	this.draw = function() {
-		bg.draw();
-		food.draw();
-		snake.draw();
-		portal.draw();
-	}
 }
 
 function menuObject() {

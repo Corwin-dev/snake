@@ -6,7 +6,9 @@ window.addEventListener("click", mouseClick, false);
 
 function inputObject() {
 	this.lastKey;
+	this.lastMove = 39;
 	this.pressedKeys = [];
+	this.storedMoves = [];
 	
 	this.isMoveKey	= function(id) {return this.isKey(id, settings.keys.move);}
 	this.isLeft		= function(id) {return this.isKey(id, settings.keys.left);}
@@ -25,17 +27,37 @@ function inputObject() {
 		var isRepeating = !!this.pressedKeys[id];
 		this.pressedKeys[id] = true;
 		if (isRepeating) return false;
-		if (game.paused) {if (this.isPause(id)) game.pause(0); return;}
-		
+
+		switch (true) {
+			case this.isPause(id):	game.pause(0); break;
+			case this.isMenu(id):	game.quit(0); break;
+			case this.isRestart(id):game.restart(0); break;
+		}
+
+		if (this.isMoveKey(id)) {
+			if (game.velocity) {
+				this.storedMoves.push(id);
+			} else {
+				this.send(id);
+			}
+		}
+	}
+
+	this.send = function(id) {
 		switch (true) {
 			case this.isLeft(id):	snake.direct([-1, 0]); break;
 			case this.isUp(id):		snake.direct([ 0,-1]); break;
 			case this.isRight(id):	snake.direct([ 1, 0]); break;
-			case this.isDown(id):	snake.direct([ 0, 1]); break;	
-				
-			case this.isPause(id):	game.pause(0); break;
-			case this.isMenu(id):	game.quit(0); break;
-			case this.isRestart(id):game.restart(0); break;
+			case this.isDown(id):	snake.direct([ 0, 1]); break;
+		}
+		this.lastMove = id;
+	}
+	this.update = function() {
+		if (this.storedMoves.length) {
+			var nextMove = this.storedMoves.shift();
+			this.send(nextMove);	
+		} else {
+			this.send(this.lastMove);
 		}
 	}
 	
