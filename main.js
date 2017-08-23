@@ -116,6 +116,16 @@ function menuObject() {
 	}
 }
 
+function backgroundObject() {
+	this.draw = function() {
+		ctx.fillStyle = toRGBA(settings.color.game.stroke);
+		ctx.fillRect(0,0,m.window[0],m.window[1]);
+		
+		ctx.fillStyle = toRGBA(settings.color.game.fill);
+		ctx.fillRect(m.border[0], m.border[1], m.pixel[0], m.pixel[1]);
+	}
+}
+
 
 function getRandomCell() {
 	var x = Math.floor(Math.random() * m.grid[0]),

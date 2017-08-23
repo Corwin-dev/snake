@@ -1,22 +1,31 @@
 "use strict";
 
-function cellObject(pos) {
-	this.pos = pos;
-
-  this.getPixels = function() {
-		var pixels = [], s = m.cell, b = m.border, l = this.pos.length;
+function cellObject(position, direction) {
+	this.pos = position;
+	this.dir = direction;
+	this.cellSize = m.cell;
+	
+	this.getPixels = function() {
+		var pixels = [], s = this.cellSize, b = m.border, l = this.pos.length;
 		for (var i=0;i<l;i++) {
-			pixels[i] = b[i]+(pos[i]*s);
+			pixels[i] = b[i]+(this.pos[i]*s);
 		}
 		return pixels;
 	}
 	
 	this.pixels = this.getPixels();
-	
+
+	this.edgeWidth = 2;
+	this.coreSize = this.cellSize - (this.edgeWidth*2);
+	this.x_edge = this.pixels[0];
+	this.y_edge = this.pixels[1];
+	this.x_core = this.x_edge + this.edgeWidth;
+	this.y_core = this.y_edge + this.edgeWidth;
+
 	this.nextCell = function(dir) {
 		var x = this.pos[0] + dir[0];
 		var y = this.pos[1] + dir[1];
-		return new cellObject([x,y]);	
+		return new cellObject([x,y],dir);	
 	}
 
 	this.getDirection = function(cell) {
@@ -35,7 +44,7 @@ function cellObject(pos) {
 
 	this.isPortal = function() {
 		if (!portal.opened) return false;
-		var l = portal.gate.length, k = this.pos.length;
+		var l = portal.gate.length;
 		for (var i=0;i<l;i++) {
 			if ((this.pos[0] === portal.gate[i].pos[0]) && (this.pos[1] === portal.gate[i].pos[1])) return true;
 		}
@@ -47,43 +56,34 @@ function cellObject(pos) {
 	}	
 
 	this.isBody = function(body) {
-		var l = body.length;
+		var l = body.length-1;
 		for (var i=0;i<l;i++) {
-			if ((body[i][0] === this.pos[0]) && (body[i][1] === this.pos[1])) return true;
+			if ((body[i].pos[0] === this.pos[0]) && (body[i].pos[1] === this.pos[1])) return true;
 		}
 		return false;
 	}
-
-	this.drawEdge = function(color, side) {
-		var s = m.cell;
-		var x = (this.pos[0] * s) + m.border[0],
-			y = (this.pos[1] * s) + m.border[1];
-
-		ctx.strokeStyle = color;
-		ctx.lineWidth = s/8;
-		ctx.lineCap = "round";
-		ctx.beginPath();
-		switch (side) {
-			case 0: this.drawLine(x,y,color,x,y+s); break;
-			case 1: this.drawLine(x,y,color,x+s,y); break;
-			case 2: this.drawLine(x+s,y,color,x+s,y+s); break;
-			case 3: this.drawLine(x,y+s,color,x+s,y+s); break;
-		}
-		ctx.stroke();
-	}
-
-	this.drawLine = function(x1,y1,color,x2,y2){
-		ctx.moveTo(x1,y1);
-		ctx.lineTo(x2,y2);
-	}
-}
-
-function backgroundObject() {
-	this.draw = function() {
-		ctx.fillStyle = toRGBA(settings.color.game.stroke);
-		ctx.fillRect(0,0,m.window[0],m.window[1]);
+	
+	this.draw = function(fill, border, sides) {
+		ctx.fillStyle = border;
+		ctx.fillRect(this.x_edge, this.y_edge, this.cellSize, this.cellSize);
 		
-		ctx.fillStyle = toRGBA(settings.color.game.fill);
-		ctx.fillRect(m.border[0], m.border[1], m.pixel[0], m.pixel[1]);
+		ctx.fillStyle = fill;
+		ctx.fillRect(this.x_core, this.y_core, this.coreSize, this.coreSize);
+		
+		if ((sides & 0x8) === 0x8) this.fillEdge(fill, 0);
+		if ((sides & 0x4) === 0x4) this.fillEdge(fill, 1);
+		if ((sides & 0x2) === 0x2) this.fillEdge(fill, 2);
+		if ((sides & 0x1) === 0x1) this.fillEdge(fill, 3);
+	}
+	
+	this.fillEdge = function(fill, side) {
+		ctx.fillStyle = fill;
+		
+		switch (side) {
+			case 0: ctx.fillRect(this.x_edge, 				this.y_core,				this.edgeWidth, 	this.coreSize);		break;
+			case 1: ctx.fillRect(this.x_core, 				this.y_edge, 				this.coreSize, 		this.edgeWidth);	break;
+			case 2: ctx.fillRect(this.x_core+this.coreSize, this.y_core, 				this.edgeWidth, 	this.coreSize);		break;
+			case 3: ctx.fillRect(this.x_core, 				this.y_core+this.coreSize, 	this.coreSize, 		this.edgeWidth);	break;
+		}
 	}
 }
