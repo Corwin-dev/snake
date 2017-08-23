@@ -25,7 +25,7 @@ function foodObject() {
 	}
 	
 	this.eat = function() {
-		if ((snake.head.pos[0] === this.cell.pos[0]) && (snake.head.pos[1] === this.cell.pos[1])) {
+		if ((snake.body[0].pos[0] === this.cell.pos[0]) && (snake.body[0].pos[1] === this.cell.pos[1])) {
 			this.move();
 			snake.maxLength++;
 		}
@@ -54,7 +54,7 @@ function portalObject() {
 	this.cooldown = 0;
 	
 	this.click = function(x,y) {
-		var cell = new cellObject([x,y]);
+		var cell = new cellObject([x,y],snake.lastDir);
 		cell.convertToGrid();
 		if (this.isObstructed(cell)) return false; else this.open(cell);
 	}
@@ -67,7 +67,7 @@ function portalObject() {
 	
 	this.open = function(cell) {
 		if (this.inUse()) return false;
-		this.gate[0] = snake.head;
+		this.gate[0] = snake.body[0];
 		this.gate[1] = cell;
 		
 		this.opened = true;
@@ -91,7 +91,7 @@ function portalObject() {
 	this.draw = function() {
 		if (!this.opened) return false;
 
-			 if (snake.head.isPortal())	ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
+			 if (snake.body[0].isPortal())	ctx.fillStyle = toRGBA(settings.color.snakehead.fill);
 		else if (this.inUse())			ctx.fillStyle = toRGBA(settings.color.snakebody.fill);
 		else 							ctx.fillStyle = toRGBA(settings.color.transparent.fill);
 		
