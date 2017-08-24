@@ -15,10 +15,27 @@ function snakeObject() {
 	this.direct = function(dir) {
 		var cell = this.body[0].nextCell(dir),
 			isPortal = cell.isPortal();
-		if (isPortal) { if (portal.inUse()) return false; else cell = this.traversePortal(cell); }
-		if (this.isObstructed(cell)) return false;
+		if (isPortal) { 
+			if (portal.inUse()) {
+				if (!game.zenMode) {
+					game.restart();
+				}
+				return false; 
+			} else {
+				cell = this.traversePortal(cell);
+			}
+		}
+
+		if (this.isObstructed(cell)) { 
+			var neck = this.body[1];
+			if (cell.is(neck)) return false;
+			if (!game.zenMode) game.restart(); 
+			return false;
+		}
+
 		this.move(cell);
 		this.lastDir = dir;
+		return true;
 	}
 	
 	this.move = function(cell) {

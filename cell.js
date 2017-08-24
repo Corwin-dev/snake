@@ -22,6 +22,10 @@ function cellObject(position, direction) {
 	this.x_core = this.x_edge + this.edgeWidth;
 	this.y_core = this.y_edge + this.edgeWidth;
 
+	this.is = function(cell) {
+		if ((this.pos[0] === cell.pos[0]) && (this.pos[1] === cell.pos[1])) return true; else return false;
+	}
+
 	this.nextCell = function(dir) {
 		var x = this.pos[0] + dir[0];
 		var y = this.pos[1] + dir[1];
@@ -46,7 +50,8 @@ function cellObject(position, direction) {
 		if (!portal.opened) return false;
 		var l = portal.gate.length;
 		for (var i=0;i<l;i++) {
-			if ((this.pos[0] === portal.gate[i].pos[0]) && (this.pos[1] === portal.gate[i].pos[1])) return true;
+			if (this.is(portal.gate[i])) return true;
+			//if ((this.pos[0] === portal.gate[i].pos[0]) && (this.pos[1] === portal.gate[i].pos[1])) return true;
 		}
 		return false;
 	}
@@ -58,7 +63,7 @@ function cellObject(position, direction) {
 	this.isBody = function(body) {
 		var l = body.length-1;
 		for (var i=0;i<l;i++) {
-			if ((body[i].pos[0] === this.pos[0]) && (body[i].pos[1] === this.pos[1])) return true;
+			if (this.is(body[i])) return true;
 		}
 		return false;
 	}

@@ -4,19 +4,31 @@ function gameObject() {
 	this.paused = false;
 	this.pausedBy;
 	this.pauseText = "PAUSED";
-	this.death = true;
+	this.zenMode = false;
 	this.velocity = true;
 
 	
 	this.start = function() {
-		if (this.velocity) setInterval(this.update, 100);
+		if (this.velocity) window.interval = setInterval(update, 100);
 		this.create();
 		this.draw();
+	}
+
+	this.end - function() {
+
+	}
+
+	this.restart = function() {
+		clearInterval(window.interval);
+		this.start();
+		//console.log(input.storedMoves, input.lastMove);
+		input.storedMoves = [39];
+		console.log(input.storedMoves, input.lastMove);
+
 	}
 	
 	this.update = function() {
 		if (!game.paused && game.velocity) input.update();
-		console.log(this.paused, this.velocity);
 	}
 
 	this.create = function() {
@@ -25,7 +37,7 @@ function gameObject() {
 		food = new foodObject();
 		food.move();
 	}
-	
+
 	this.pause = function(flag) {
 		this.paused = !this.paused;
 		

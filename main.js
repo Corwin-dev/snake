@@ -1,7 +1,5 @@
 "use strict";
 
-
-
 var	m,
 	bg,
 	input,
@@ -87,6 +85,10 @@ function backgroundObject() {
 		ctx.fillStyle = toRGBA(settings.color.game.fill);
 		ctx.fillRect(m.border[0], m.border[1], m.pixel[0], m.pixel[1]);
 	}
+}
+
+function update() {
+	game.update();
 }
 
 

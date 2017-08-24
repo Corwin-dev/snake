@@ -44,23 +44,34 @@ function inputObject() {
 	}
 
 	this.send = function(id) {
+		var snakeMoved = false;
 		switch (true) {
-			case this.isLeft(id):	snake.direct([-1, 0]); break;
-			case this.isUp(id):		snake.direct([ 0,-1]); break;
-			case this.isRight(id):	snake.direct([ 1, 0]); break;
-			case this.isDown(id):	snake.direct([ 0, 1]); break;
+			case this.isLeft(id):	snakeMoved = snake.direct([-1, 0]); break;
+			case this.isUp(id):		snakeMoved = snake.direct([ 0,-1]); break;
+			case this.isRight(id):	snakeMoved = snake.direct([ 1, 0]); break;
+			case this.isDown(id):	snakeMoved = snake.direct([ 0, 1]); break;
 		}
-		this.lastMove = id;
+		
+		if (snakeMoved) this.lastMove = id;
+		//console.log(this.lastMove, id);
+		return snakeMoved;
 	}
 	this.update = function() {
-		if (this.storedMoves.length) {
-			var nextMove = this.storedMoves.shift();
-			this.send(nextMove);	
-		} else {
-			this.send(this.lastMove);
+		var snakeMoved = false;
+		var i = 0;
+		while (!snakeMoved) {
+			if (this.storedMoves.length) {
+				var nextMove = this.storedMoves.shift();
+				snakeMoved = this.send(nextMove);
+			} else {
+				snakeMoved = this.send(this.lastMove);
+			}
+			if (i++ > 100) {
+				debugger; 
+				break;
+			}
 		}
 	}
-	
 	this.keyUp = function(id) {
 		this.pressedKeys[id] = false;
 	}
